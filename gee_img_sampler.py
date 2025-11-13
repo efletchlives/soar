@@ -1,7 +1,12 @@
 import ee
-import os
-import json
 import geemap
+import os
+from PIL import Image
+import numpy as np
+
+# functions
+
+
 # geemap.update_package()
 
 # authenticate and initialize google earth engine
@@ -12,11 +17,11 @@ print("connected successfully!")
 
 # pick a center point for your photo
 region = ee.Geometry.Polygon([
-    [[-100.0, 33.0],
-     [-100.0, 32.5],
-     [-99.5, 32.5],
-     [-99.5, 33.0],
-     [-100.0, 33.0]]
+    [[-99.88, 32.88],
+     [-99.88, 32.87],
+     [-99.87, 32.87],
+     [-99.87, 32.88],
+     [-99.88, 32.88]]
 ]) # (longitude, latitude)
 
 # pick 2km x 2km area 
@@ -30,18 +35,16 @@ collection = (
 )
 
 image = collection.median().clip(region)
-
-
 rgb = image.select(["B4", "B3", "B2"])
 
-# export as png
-geemap.ee_export_image(
-    rgb,
-    filename="/workspaces/soar/texas_patch.tif",
-    scale=50,
-    region=region,
-    file_per_band=False
-)
+arr = geemap.ee_to_numpy(rgb, region=region, scale=10)
+arr = np.nan_to_num(arr)
+arr = (arr / arr.max() * 255).astype(np.uint8)
+
+path = '/workspaces/soar/texas_pics'
+png = os.path.join(path,'texas_patch.png')
+Image.fromarray(arr).save(png)
+
 
 print('successfully exported image')
 
